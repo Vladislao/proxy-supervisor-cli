@@ -1,6 +1,11 @@
 {
   "name": "proxy-supervisor-cli",
   "version": "1.0.0",
+  "preferGlobal": true,
+  "engines": {
+    "node": ">= 6.0.0"
+  },
+  "bin": "./index.js",
   "description": "Run proxy-supervisor from command line",
   "main": "index.js",
   "scripts": {
