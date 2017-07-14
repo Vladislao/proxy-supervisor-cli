@@ -63,5 +63,5 @@ prog
 
     return 0;
   });
-``
+
 prog.parse(process.argv);
