@@ -1,6 +1,6 @@
 {
   "name": "proxy-supervisor-cli",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "preferGlobal": true,
   "engines": {
     "node": ">= 6.0.0"
