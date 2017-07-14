@@ -38,15 +38,19 @@ prog
 
     // concat single list of proxies
     const proxies = fileProxies.reduce((acc, list) => acc.concat(list), []).concat(options.proxies);
-
-    if (proxies.length === 0) {
-      throw new Error('no proxies specified');
-    }
-    logger.debug("Found " + proxies.length + " proxies");
+    logger.debug("Proxies specified: " + proxies.length);
 
     // add provided proxies to balancer
     let balancer = supervisor.balancer().add(proxies);
+    if (balancer.proxies.size === 0) {
+      if (proxies.length > 0) {
+        throw new Error('check proxies format, none of them are valid');
+      } else {
+        throw new Error('you should specify proxies with -p or -f');
+      }
+    }
 
+    logger.debug("Unique and valid proxies: " + balancer.proxies.size);
     // activate monitor
     if (options.monitor) {
       logger.debug("Activating monitor");
@@ -55,14 +59,12 @@ prog
 
     // activate watchers
     if (options.watch) {
-      logger.debug("Creating watchers");
-
+      logger.debug("Activating watchers");
       options.file.forEach((path) => {
         fs.watch(path, 'utf-8', (e) => {
           if(e !== 'change') return;
-
           read(path, logger).then(res => {
-            logger.debug("Updating " + res.length + " proxies");
+            logger.debug("Refreshing " + path);
             balancer.add(res);
           });
         });
@@ -78,7 +80,7 @@ prog
     });
 
     server.listen(args.port, () => {
-      logger.info("listening on port " + args.port);
+      logger.info("Listening on port " + args.port);
     });
 
     return 0;
