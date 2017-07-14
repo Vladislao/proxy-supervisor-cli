@@ -1,5 +1,5 @@
 # proxy-supervisor-cli
-Run proxy-supervisor from command line
+Run [proxy-supervisor](https://github.com/vladislao/proxy-supervisor) from command line
 
 ## Installation
 
