@@ -28,30 +28,50 @@ prog
   .argument('[port]', 'port for server', prog.INT, 8080)
   .option('-p, --proxies <proxy>', 'comma separated list of proxies', prog.ARRAY, [])
   .option('-f, --file <file>', 'file with list of proxies', prog.REPEATABLE, [])
-  // .option('-s, --strategy <strategy>', 'balancer strategy')
-  .option('-w, --watch [watch]', 'watch files for changes TODO', prog.BOOL, false)
+  .option('-w, --watch [watch]', 'watch files for changes', prog.BOOL, false)
   .option('-m, --monitor [monitor]', 'enable monitor for proxies', prog.BOOL, false)
   .action(async (args, options, logger) => {
+
     // read all provided files for proxies
+    options.file = Array.isArray(options.file) ? options.file : [options.file];
     const fileProxies = await Promise.all(options.file.map((path) => read(path, logger)));
+
     // concat single list of proxies
     const proxies = fileProxies.reduce((acc, list) => acc.concat(list), []).concat(options.proxies);
 
     if (proxies.length === 0) {
       throw new Error('no proxies specified');
     }
-
     logger.debug("Found " + proxies.length + " proxies");
 
     // add provided proxies to balancer
     let balancer = supervisor.balancer().add(proxies);
+
+    // activate monitor
     if (options.monitor) {
       logger.debug("Activating monitor");
       balancer = balancer.subscribe(supervisor.monitor);
     }
 
-    const middleware = balancer.proxy();
+    // activate watchers
+    if (options.watch) {
+      logger.debug("Creating watchers");
 
+      options.file.forEach((path) => {
+        fs.watch(path, 'utf-8', (e) => {
+          if(e !== 'change') return;
+
+          read(path, logger).then(res => {
+            logger.debug("Updating " + res.length + " proxies");
+            balancer.add(res);
+          });
+        });
+      });
+    }
+
+
+    // initialize server
+    const middleware = balancer.proxy();
     const server = http.createServer((req, res) => {
       logger.debug(req.url);
       return middleware(req, res, (err) => { logger.debug(err); });
