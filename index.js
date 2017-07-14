@@ -22,7 +22,8 @@ const read = (path, logger) =>
   });
 
 prog
-  .version('1.0.0')
+  .name('Proxy Supervisor')
+  .version(':latest')
   .command('start', 'start proxy-balancer')
   .alias('listen')
   .argument('[port]', 'port for server', prog.INT, 8080)
@@ -38,7 +39,7 @@ prog
 
     // concat single list of proxies
     const proxies = fileProxies.reduce((acc, list) => acc.concat(list), []).concat(options.proxies);
-    logger.debug("Proxies specified: " + proxies.length);
+    logger.info("Proxies specified: " + proxies.length);
 
     // add provided proxies to balancer
     let balancer = supervisor.balancer().add(proxies);
@@ -50,16 +51,16 @@ prog
       }
     }
 
-    logger.debug("Unique and valid proxies: " + balancer.proxies.size);
+    logger.info("Unique and valid proxies: " + balancer.proxies.size);
     // activate monitor
     if (options.monitor) {
-      logger.debug("Activating monitor");
+      logger.info("Activating monitor");
       balancer = balancer.subscribe(supervisor.monitor);
     }
 
     // activate watchers
     if (options.watch) {
-      logger.debug("Activating watchers");
+      logger.info("Activating watchers");
       options.file.forEach((path) => {
         fs.watch(path, 'utf-8', (e) => {
           if(e !== 'change') return;
