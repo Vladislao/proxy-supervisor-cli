@@ -78,7 +78,7 @@ prog
     const server = http.createServer((req, res) => {
       logger.debug(req.url);
       return middleware(req, res, (err) => { logger.debug(err); });
-    });
+    }).on("connect", balancer.connect());
 
     server.listen(args.port, () => {
       logger.info("Listening on port " + args.port);
